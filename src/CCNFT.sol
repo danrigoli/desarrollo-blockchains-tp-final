@@ -286,7 +286,7 @@ contract CCNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
                 string.concat(
                     '{"name":"CCNFT #',
                     tokenId.toString(),
-                    '","description":"NFT genérico on-chain",',
+                    '","description":"CCNFT es una coleccion de pruebas. ',
                     '"image":"',
                     _defaultImage(),
                     '"}'
