@@ -22,12 +22,7 @@ contract CCNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
 
     event Buy(address indexed buyer, uint256 indexed tokenId, uint256 value);
     event Claim(address indexed claimer, uint256 indexed tokenId);
-    event Trade(
-        address indexed buyer,
-        address indexed seller,
-        uint256 indexed tokenId,
-        uint256 value
-    );
+    event Trade(address indexed buyer, address indexed seller, uint256 indexed tokenId, uint256 value);
     event PutOnSale(uint256 indexed tokenId, uint256 price);
 
     /* -------------------------------------------------------------------------- */
@@ -40,34 +35,35 @@ contract CCNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
     }
 
     using Counters for Counters.Counter;
-    using Strings  for uint256;
+    using Strings for uint256;
+
     Counters.Counter private _tokenIdTracker;
 
     // tokenId  ➜ valor base del NFT
     mapping(uint256 => uint256) public values;
     // valor permitido (true ⇒ se puede mintear a ese precio)
-    mapping(uint256 => bool)   public validValues;
+    mapping(uint256 => bool) public validValues;
     // tokenId  ➜ info de venta
     mapping(uint256 => TokenSale) public tokensOnSale;
     // listado de todos los tokens en venta (para UI)
     uint256[] public listTokensOnSale;
 
-    IERC20  public fundsToken;      // ERC‑20 usado como medio de pago
-    address public fundsCollector;  // recibe el pago neto de cada buy()
-    address public feesCollector;   // recibe las comisiones (buyFee / tradeFee)
+    IERC20 public fundsToken; // ERC‑20 usado como medio de pago
+    address public fundsCollector; // recibe el pago neto de cada buy()
+    address public feesCollector; // recibe las comisiones (buyFee / tradeFee)
 
-    bool    public canBuy  = true;
-    bool    public canClaim = true;
-    bool    public canTrade = true;
+    bool public canBuy = true;
+    bool public canClaim = true;
+    bool public canTrade = true;
 
-    uint256 public totalValue;        // suma de todos los "values" circulando
-    uint256 public maxValueToRaise;   // techo de recaudación en buy()
+    uint256 public totalValue; // suma de todos los "values" circulando
+    uint256 public maxValueToRaise; // techo de recaudación en buy()
 
-    uint16  public buyFee;            // ej. 250 ⇒ 2,50 %
-    uint16  public tradeFee;          // idem para trade()
+    uint16 public buyFee; // ej. 250 ⇒ 2,50 %
+    uint16 public tradeFee; // idem para trade()
 
-    uint16  public maxBatchCount = 50; // protección de gas en bucles
-    uint32  public profitToPay;        // % extra que se paga en claim()
+    uint16 public maxBatchCount = 50; // protección de gas en bucles
+    uint32 public profitToPay; // % extra que se paga en claim()
 
     string private constant _SVG_IMAGE = string(
         abi.encodePacked(
@@ -75,7 +71,7 @@ contract CCNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
             '<rect width="100%" height="100%" fill="#222"/>',
             '<text x="50%" y="50%" dominant-baseline="middle" ',
             'text-anchor="middle" font-size="24" fill="#fff">CCNFT</text>',
-            '</svg>'
+            "</svg>"
         )
     );
 
@@ -92,11 +88,11 @@ contract CCNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
     ) ERC721(name_, symbol_) {
         require(fundsToken_ != address(0), "Funds token zero");
         require(fundsCollector_ != address(0), "FundsCollector zero");
-        require(feesCollector_ != address(0),  "FeesCollector zero");
+        require(feesCollector_ != address(0), "FeesCollector zero");
 
-        fundsToken     = IERC20(fundsToken_);
+        fundsToken = IERC20(fundsToken_);
         fundsCollector = fundsCollector_;
-        feesCollector  = feesCollector_;
+        feesCollector = feesCollector_;
     }
 
     /* -------------------------------------------------------------------------- */
@@ -126,18 +122,11 @@ contract CCNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
         }
 
         // pago principal al proyecto
-        require(
-            fundsToken.transferFrom(_msgSender(), fundsCollector, value * amount),
-            "Cannot send funds tokens"
-        );
+        require(fundsToken.transferFrom(_msgSender(), fundsCollector, value * amount), "Cannot send funds tokens");
         // comisión
         if (buyFee > 0) {
             require(
-                fundsToken.transferFrom(
-                    _msgSender(),
-                    feesCollector,
-                    (value * amount * buyFee) / 10_000
-                ),
+                fundsToken.transferFrom(_msgSender(), feesCollector, (value * amount * buyFee) / 10_000),
                 "Cannot send fees tokens"
             );
         }
@@ -149,10 +138,7 @@ contract CCNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
      */
     function claim(uint256[] calldata listTokenId) external nonReentrant {
         require(canClaim, "Claim disabled");
-        require(
-            listTokenId.length > 0 && listTokenId.length <= maxBatchCount,
-            "Bad list length"
-        );
+        require(listTokenId.length > 0 && listTokenId.length <= maxBatchCount, "Bad list length");
 
         uint256 claimValue = 0;
         for (uint256 i = 0; i < listTokenId.length; i++) {
@@ -166,7 +152,7 @@ contract CCNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
             // si estaba a la venta, lo quitamos
             TokenSale storage ts = tokensOnSale[id];
             ts.onSale = false;
-            ts.price  = 0;
+            ts.price = 0;
             _removeFromArray(id);
 
             _burn(id);
@@ -176,10 +162,7 @@ contract CCNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
         totalValue -= claimValue;
 
         uint256 payout = claimValue + (claimValue * profitToPay) / 10_000;
-        require(
-            fundsToken.transferFrom(fundsCollector, _msgSender(), payout),
-            "Cannot send claim funds"
-        );
+        require(fundsToken.transferFrom(fundsCollector, _msgSender(), payout), "Cannot send claim funds");
     }
 
     /**
@@ -196,18 +179,11 @@ contract CCNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
         require(ts.onSale, "Token not On Sale");
 
         // Paga al vendedor
-        require(
-            fundsToken.transferFrom(_msgSender(), seller, ts.price),
-            "Cannot pay seller"
-        );
+        require(fundsToken.transferFrom(_msgSender(), seller, ts.price), "Cannot pay seller");
         // Paga la comisión
         if (tradeFee > 0) {
             require(
-                fundsToken.transferFrom(
-                    _msgSender(),
-                    feesCollector,
-                    (ts.price * tradeFee) / 10_000
-                ),
+                fundsToken.transferFrom(_msgSender(), feesCollector, (ts.price * tradeFee) / 10_000),
                 "Cannot pay trade fee"
             );
         }
@@ -217,7 +193,7 @@ contract CCNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
         _safeTransfer(seller, _msgSender(), tokenId, "");
 
         ts.onSale = false;
-        ts.price  = 0;
+        ts.price = 0;
         _removeFromArray(tokenId);
     }
 
@@ -231,7 +207,7 @@ contract CCNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
 
         TokenSale storage ts = tokensOnSale[tokenId];
         ts.onSale = true;
-        ts.price  = price;
+        ts.price = price;
 
         _addToArray(tokenId);
         emit PutOnSale(tokenId, price);
@@ -298,27 +274,22 @@ contract CCNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
 
     // Devuelve "data:image/svg+xml;base64,<BASE64-SVG>"
     function _defaultImage() private pure returns (string memory) {
-        return string.concat(
-            "data:image/svg+xml;base64,",
-            Base64.encode(bytes(_SVG_IMAGE))
-        );
+        return string.concat("data:image/svg+xml;base64,", Base64.encode(bytes(_SVG_IMAGE)));
     }
 
     // JSON on-chain: name, description y la imagen SVG
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        override(ERC721)
-        returns (string memory)
-    {
+    function tokenURI(uint256 tokenId) public view override(ERC721) returns (string memory) {
         require(_exists(tokenId), "ERC721: invalid token");
 
         string memory json = Base64.encode(
             bytes(
                 string.concat(
-                    '{"name":"CCNFT #', tokenId.toString(),
+                    '{"name":"CCNFT #',
+                    tokenId.toString(),
                     '","description":"NFT genérico on-chain",',
-                    '"image":"', _defaultImage(), '"}'
+                    '"image":"',
+                    _defaultImage(),
+                    '"}'
                 )
             )
         );
@@ -374,10 +345,7 @@ contract CCNFT is ERC721Enumerable, Ownable, ReentrancyGuard {
     /*                            SOLIDITY COMPLIANCE                              */
     /* -------------------------------------------------------------------------- */
 
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId)
-        internal
-        override(ERC721Enumerable)
-    {
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal override(ERC721Enumerable) {
         super._beforeTokenTransfer(from, to, tokenId);
     }
 }

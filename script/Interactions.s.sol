@@ -26,8 +26,8 @@ import {CCNFT} from "../src/CCNFT.sol";
 contract BuyNFT is Script {
     function run() external {
         CCNFT ccnft = CCNFT(vm.envAddress("ADDRESS_CCNFT"));
-        uint256 value      = vm.envUint("VALUE");
-        uint16  amount     = uint16(vm.envUint("AMOUNT"));
+        uint256 value = vm.envUint("VALUE");
+        uint16 amount = uint16(vm.envUint("AMOUNT"));
 
         vm.startBroadcast();
         ccnft.buy(value, amount);
@@ -42,7 +42,7 @@ contract PutOnSaleNFT is Script {
     function run() external {
         CCNFT ccnft = CCNFT(vm.envAddress("ADDRESS_CCNFT"));
         uint256 tokenId = vm.envUint("TOKEN_ID");
-        uint256 price   = vm.envUint("PRICE");
+        uint256 price = vm.envUint("PRICE");
 
         vm.startBroadcast();
         ccnft.putOnSale(tokenId, price);
@@ -72,8 +72,8 @@ contract ClaimNFT is Script {
         CCNFT ccnft = CCNFT(vm.envAddress("ADDRESS_CCNFT"));
         string memory raw = vm.envString("TOKEN_IDS"); // "1,2,5"
         string[] memory parts = vm.split(raw, ",");
-        uint256[] memory ids  = new uint256[](parts.length);
-        for (uint i = 0; i < parts.length; i++) {
+        uint256[] memory ids = new uint256[](parts.length);
+        for (uint256 i = 0; i < parts.length; i++) {
             ids[i] = vm.parseUint(parts[i]);
         }
 

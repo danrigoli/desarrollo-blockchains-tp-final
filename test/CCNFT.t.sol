@@ -19,19 +19,19 @@ import "../src/CCNFT.sol";
  */
 contract CCNFTTest is Test {
     /* ───────────── Actores ───────────── */
-    address deployer  = address(this);     // owner
-    address user1     = address(0xA1);
-    address user2     = address(0xB2);
+    address deployer = address(this); // owner
+    address user1 = address(0xA1);
+    address user2 = address(0xB2);
     address fundsColl = address(0xF1);
-    address feesColl  = address(0xF2);
+    address feesColl = address(0xF2);
 
     /* ───────────── Contratos ─────────── */
-    BUSD  busd;
+    BUSD busd;
     CCNFT nft;
 
     /* ─────────── Parámetros ──────────── */
-    uint256 constant VALUE  = 100 * 1e18;  // 100 BUSD
-    uint16  constant AMOUNT = 1;
+    uint256 constant VALUE = 100 * 1e18; // 100 BUSD
+    uint16 constant AMOUNT = 1;
 
     /* ───────────── setUp() ───────────── */
     function setUp() public {
@@ -39,13 +39,7 @@ contract CCNFTTest is Test {
         busd = new BUSD();
 
         // 2. despliegue NFT
-        nft = new CCNFT(
-            "CoolCourse NFT",
-            "CCNFT",
-            address(busd),
-            fundsColl,
-            feesColl
-        );
+        nft = new CCNFT("CoolCourse NFT", "CCNFT", address(busd), fundsColl, feesColl);
 
         // 3. configuración inicial
         nft.addValidValues(VALUE);
@@ -71,7 +65,7 @@ contract CCNFTTest is Test {
         assertEq(nft.ownerOf(0), user1);
 
         uint256 fee = (VALUE * nft.buyFee()) / 10_000;
-        assertEq(busd.balanceOf(feesColl),  fee);
+        assertEq(busd.balanceOf(feesColl), fee);
         assertEq(busd.balanceOf(fundsColl), VALUE - fee);
     }
 
@@ -89,7 +83,7 @@ contract CCNFTTest is Test {
     }
 
     function testSetProfitToPay() public {
-        nft.setProfitToPay(500);           // 5 %
+        nft.setProfitToPay(500); // 5 %
         assertEq(nft.profitToPay(), 500);
     }
 
@@ -127,19 +121,19 @@ contract CCNFTTest is Test {
     }
 
     function testSetBuyFee() public {
-        nft.setBuyFee(300);                // 3 %
+        nft.setBuyFee(300); // 3 %
         assertEq(nft.buyFee(), 300);
     }
 
     function testSetTradeFee() public {
-        nft.setTradeFee(450);              // 4.5 %
+        nft.setTradeFee(450); // 4.5 %
         assertEq(nft.tradeFee(), 450);
     }
 
     /* ──────────── Negativos ──────────── */
     function testCannotTradeWhenCanTradeIsFalse() public {
         vm.prank(user1);
-        nft.buy(VALUE, AMOUNT);   // crea el token 0
+        nft.buy(VALUE, AMOUNT); // crea el token 0
 
         // canTrade sigue en false ⇒ trade debe revertir con “Token not On Sale”
         vm.prank(user2);
@@ -148,7 +142,7 @@ contract CCNFTTest is Test {
     }
 
     function testCannotTradeWhenTokenDoesNotExist() public {
-        nft.setCanTrade(true);                         // activamos trade
+        nft.setCanTrade(true); // activamos trade
 
         // token 9999 no existe ⇒ revert “Token does not exist”
         vm.prank(user2);

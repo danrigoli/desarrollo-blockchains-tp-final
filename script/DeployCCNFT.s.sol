@@ -2,7 +2,7 @@
 pragma solidity ^0.8.25;
 
 import {Script} from "forge-std/Script.sol";
-import {CCNFT}  from "../src/CCNFT.sol";
+import {CCNFT} from "../src/CCNFT.sol";
 
 /**
  * @dev Script de despliegue para CCNFT adaptado al nuevo constructor:
@@ -26,12 +26,12 @@ contract DeployCCNFT is Script {
         /* ------------------------------------------------------------------ */
         /*                       1. Obtenemos las variables                     */
         /* ------------------------------------------------------------------ */
-        string  memory name_   = vm.envString("NAME");
-        string  memory symbol_ = vm.envString("SYMBOL");
+        string memory name_ = vm.envString("NAME");
+        string memory symbol_ = vm.envString("SYMBOL");
 
-        address fundsToken_     = vm.envAddress("ADDRESS_BUSD");
+        address fundsToken_ = vm.envAddress("ADDRESS_BUSD");
         address fundsCollector_ = vm.envAddress("FUNDS_COLLECTOR");
-        address feesCollector_  = vm.envAddress("FEES_COLLECTOR");
+        address feesCollector_ = vm.envAddress("FEES_COLLECTOR");
 
         /* ------------------------------------------------------------------ */
         /*                       2. Despliegue y configuración                  */
